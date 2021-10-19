@@ -7,13 +7,21 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/src/index.html')
 })
+
+app.get('/mapviewmodel', (req, res) => {
+  res.sendFile(__dirname + '/src/mapviewmodel.html')
+})
+
 app.get('/graphic', (req, res) => {
   res.sendFile(__dirname + '/src/graphic.html')
 })
 app.get('/graphicv3', (req, res) => {
   res.sendFile(__dirname + '/src/graphicv3.html')
 })
-
+// JS
+app.get('/mapviewmodeljs', (req, res) => {
+  res.sendFile(__dirname + '/src/js/mapviewmodel.js')
+})
 app.get('/graphicjsv2', (req, res) => {
   res.sendFile(__dirname + '/src/js/graphicv2.js')
 })
