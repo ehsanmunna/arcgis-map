@@ -12,13 +12,15 @@
         "esri/geometry/geometryEngine",
         "esri/Graphic",
         "esri/layers/CSVLayer",
-        "esri/widgets/Sketch/SketchViewModel"
+        "esri/widgets/Sketch/SketchViewModel",
+        "esri/views/draw/Draw"
     ],
         function (
             esriConfig,
             Sketch, Map, GraphicsLayer, MapView, dom, on, GeometryService,
             Polyline, Polygon, geometryEngine, Graphic, CSVLayer
-            // , SketchViewModel
+            , SketchViewModel
+            , Draw
         ) {
 
             esriConfig.apiKey = "AAPKd9159fee5d4f444092f9bf7e303e03f6YQJR0K3kHLezR2G951W_IyzwufRn2t7mUsh7_rU8HGO1oCMPG9gga61jSRkZcU0Q";
@@ -76,55 +78,49 @@
                 center: [32.58455069470879, -25.93892584682388],
             });
 
-            // var gl = new GraphicsLayer();
             view.when(() => {
-                // console.log('do it');
-                const sketch = new Sketch({
-                    view: view,
-                    layer: graphicsLayer,    
-                    // pointSymbol: textKeySymbol,
-                    // activeTool: "polygon"
-                    updateOnGraphicClick: true
-                });
-                console.log('check ', sketch);
-                view.ui.add(sketch, "top-right");
-
-                sketch.on('update', (graphic) => {
-                    // sketchViewModel.layer.remove(graphic);
-                    // do something with the new graphic
-                    console.log(graphic);
-                });
+                console.log('sdfa when');
             })
 
-            // This function is called when user completes drawing a rectangle
-            // on the map. Use the rectangle to select features in the layer and table
-            function selectFeatures(geometry) {
-                if (csvLayerView) {
-                    // create a query and set its geometry parameter to the
-                    // rectangle that was drawn on the view
-                    const query = {
-                        geometry: geometry,
-                        outFields: ["*"]
-                    };
 
-                    // query graphics from the csv layer view. Geometry set for the query
-                    // can be polygon for point features and only intersecting geometries are returned
-                    csvLayerView.queryFeatures(query)
-                        .then((results) => {
-                            if (results.features.length === 0) {
-                                clearSelection();
-                            } else {
-                                // pass in the query results to the table by calling its selectRows method.
-                                // This will trigger FeatureTable's selection-change event
-                                // where we will be setting the feature effect on the csv layer view
-                                featureTable.filterGeometry = geometry;
-                                featureTable.selectRows(results.features);
-                            }
-                        })
-                        .catch(errorCallback);
-                }
+
+            const sketchViewModel = new SketchViewModel({
+                view: view,
+                layer: graphicsLayer,
+                pointSymbol: textKeySymbol
+            });
+
+
+
+            // create a new instance of draw
+            let draw = new Draw({
+                view: view
+            });
+
+            let action = draw.create("polyline", { mode: "click" });
+            // fires when the drawing is completed
+            action.on("draw-complete", function (evt) {
+                measureLine(evt.vertices);
+            });
+
+
+            function measureLine(vertices) {
+                view.graphics.removeAll();
+
+                let line = createLine(vertices);
+                let lineLength = geometryEngine.geodesicLength(line, "miles");
+                let graphic = createGraphic(line);
+                view.graphics.add(graphic);
             }
 
+            function createLine(vertices) {
+                let polyline = {
+                    type: "polyline", // autocasts as new Polyline()
+                    paths: vertices,
+                    spatialReference: view.spatialReference
+                }
+                return polyline;
+            }
 
         });
 })();
