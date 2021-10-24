@@ -7,7 +7,9 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/src/index.html')
 })
-
+app.get('/editable', (req, res) => {
+  res.sendFile(__dirname + '/src/editable.html')
+})
 app.get('/mapviewmodel', (req, res) => {
   res.sendFile(__dirname + '/src/mapviewmodel.html')
 })

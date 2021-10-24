@@ -1,0 +1,112 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Intro to graphics | Sample | ArcGIS API for JavaScript 4.21</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.21/"></script>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/widgets/Sketch",
+            "esri/layers/GraphicsLayer"
+        ], (
+            Map,
+            MapView,
+            Graphic,
+            Sketch,
+            GraphicsLayer
+        ) => {
+            const graphicsLayer = new GraphicsLayer();
+            const _rings = [
+                // [88.31639980877823, 26.58612140901845],
+                // [92.42528665011821, 25.04335498812763],
+                // [92.62304056226826, 21.286867803750877],
+                // [92.33739602249597, 20.77414387039908],
+                // [89.08544280047288, 21.654927963696917]
+
+                // [-114.02656763464601, 42.02324812871491],
+                // [-109.11792808406383, 37.014280332652774],
+                // [-114.02194032129009, 36.965409748846724],
+                // [-114.03093603534505, 41.96165575404947],
+                // [-111.03448614917237, 41.96583700036849],
+                // [-111.03510554902665, 41.03746077303722],
+                // [-109.06434182409882, 41.043981537801315]
+
+                    [-11220289.94627741, 4002837.4133387236],
+                [-11220289.94627741, 4885837.964088845],
+                [-9905573.059772726, 4885837.964088845],
+                [-11220289.94627741, 4002837.4133387236]
+            ]
+            // const _center = [90.14013033193984, 23.78288311709372];
+            const _center = [-80, 35];
+
+            const map = new Map({
+                basemap: "gray-vector",
+                layers: [graphicsLayer]
+            });
+
+            const view = new MapView({
+                center: _center,
+                container: "viewDiv",
+                map: map,
+                zoom: 3
+            });
+
+            const polygon = {
+                type: "polygon",
+                rings: _rings,
+                spatialReference: { wkid: 102100 }
+            };
+
+            const fillSymbol = {
+                type: "simple-fill",
+                color: [227, 139, 79, 0.8],
+                outline: {
+                    color: [255, 255, 255],
+                    width: 1
+                }
+            };
+
+            const polygonGraphic = new Graphic({
+                geometry: polygon,
+                symbol: fillSymbol
+            });
+
+            // graphicsLayer.add(pointGraphic);
+            // graphicsLayer.add(polylineGraphic);
+            graphicsLayer.add(polygonGraphic);
+
+            const sketch = new Sketch({
+                view: view,
+                layer: graphicsLayer,
+                creationMode: "update"
+            });
+
+            view.ui.add(sketch, 'top-right');
+
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>
