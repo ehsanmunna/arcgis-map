@@ -18,13 +18,15 @@
             width: 100%;
             position: relative;
         }
-        .btn{
+
+        .btn {
             padding: 10px;
             background: white;
             border: 1px solid lightgray;
             cursor: pointer;
         }
-        .btn:hover{
+
+        .btn:hover {
             background: rgb(235, 235, 235);
         }
     </style>
@@ -36,16 +38,17 @@
             "esri/Graphic",
             "esri/widgets/Sketch",
             "esri/layers/GraphicsLayer",
-            "esri/geometry/Geometry"
+            "esri/geometry/Geometry",
+            "dojo/dom", "dojo/on"
         ], (
             Map,
             MapView,
             Graphic,
             Sketch,
             GraphicsLayer,
-            Geometry
+            Geometry,
+            dom, on
         ) => {
-            const graphicsLayer = new GraphicsLayer();
             const _rings = [
                 [10062703.0735754, 2722478.508873152],
                 [10063671.2760309, 2722801.243073582],
@@ -58,62 +61,100 @@
                 // [-9905573.059772726, 4885837.964088845],
                 // [-11220289.94627741, 4002837.4133387236]
             ]
+            const updateRings = [
+                [10062970.401763909, 2723129.5184100512],
+                [10063348.340565763, 2723360.952719375],
+                [10063668.95130482, 2722813.1540470235],
+                [10063257.040619984, 2722660.279990449],
+                [10062702.872164903, 2722486.1734341164],
+                [10062552.121569702, 2722951.1653683465],
+                [10062970.401763909, 2723129.5184100512]
+            ]
             const _center = [90.39806303907038, 23.748858777807484];
             // const _center = [-11447244.491202017, 4467769.286797373];
             // const _center = [-80, 35];
 
-            const map = new Map({
-                // basemap: "gray-vector",
-                basemap: "topo-vector",
-                layers: [graphicsLayer]
+            var sketch = init(_rings);
+
+            // Extra buttons
+            on(dom.byId("Update"), "click", function (evt) {
+                //remove from sketch
+                console.log(sketch);
+                // console.log('working... ', evt);
+                // // view.ui.remove(sketch);
+                sketch.delete();
+                // view.ui.remove(sketch);
+                // const uGraphicsLayer = new GraphicsLayer();
+                // const polygonGraphicUpdated = createPolygonGraphic(updateRings);
+                // uGraphicsLayer.add(polygonGraphicUpdated);
+                // // sketch.layer = graphicsLayer;
+                // map.layers = []
+                // map.layers.push(uGraphicsLayer)
+                // const updatedSketch = new Sketch({
+                //     view: view,
+                //     layer: polygonGraphicUpdated,
+                //     creationMode: "update"
+                // });
+                // view.ui.add(updatedSketch, 'top-right');
+                
+                init(updateRings);
             });
 
-            const view = new MapView({
-                center: _center,
-                container: "viewDiv",
-                map: map,
-                zoom: 16
-            });
-            view.on('click', function (e) {
-                console.log('view on click : ', e);
-                // console.log('mapPoint: ', `[${e.mapPoint.x}, ${e.mapPoint.y}]`);
-            })
+            function init(pointRings) {
+                const graphicsLayer = new GraphicsLayer();
+                const map = new Map({
+                    // basemap: "gray-vector",
+                    basemap: "topo-vector",
+                    layers: [graphicsLayer]
+                });
 
-            const polygon = {
-                type: "polygon",
-                rings: _rings,
-                spatialReference: { wkid: 102100 }
-            };
-            // console.log(polygon.getExtent().getCenter());
+                const view = new MapView({
+                    center: _center,
+                    container: "viewDiv",
+                    map: map,
+                    zoom: 16
+                });
+                // view.on('click', function (e) {
+                //     // console.log('view on click : ', e);
+                //     console.log(`[${e.mapPoint.x}, ${e.mapPoint.y}]`);
+                // })
 
-            const fillSymbol = {
-                type: "simple-fill",
-                color: [227, 139, 79, 0.8],
-                outline: {
-                    color: [255, 255, 255],
-                    width: 1
-                }
-            };
+                const polygonGraphic = createPolygonGraphic(pointRings);
 
-            const polygonGraphic = new Graphic({
-                geometry: polygon,
-                symbol: fillSymbol
-            });
+                graphicsLayer.add(polygonGraphic);
 
-            // graphicsLayer.add(pointGraphic);
-            // graphicsLayer.add(polylineGraphic);
-            graphicsLayer.add(polygonGraphic);
+                const sketch = new Sketch({
+                    view: view,
+                    layer: graphicsLayer,
+                    creationMode: "update"
+                });
 
-            const sketch = new Sketch({
-                view: view,
-                layer: graphicsLayer,
-                creationMode: "update"
-            });
+                view.ui.add(sketch, 'top-right');
+                return sketch;
+            }
 
-            view.ui.add(sketch, 'top-right');
+            function createPolygonGraphic(_rings) {
+                var polygon = {
+                    type: "polygon",
+                    rings: _rings,
+                    spatialReference: { wkid: 102100 }
+                };
 
+                const fillSymbol = {
+                    type: "simple-fill",
+                    color: [227, 139, 79, 0.8],
+                    outline: {
+                        color: [255, 255, 255],
+                        width: 1
+                    }
+                };
 
-            
+                const polygonGraphic = new Graphic({
+                    geometry: polygon,
+                    symbol: fillSymbol
+                });
+                return polygonGraphic;
+            }
 
         });
     </script>
@@ -122,7 +163,7 @@
 <body>
     <div id="viewDiv">
         <div style="position: absolute; top: 68px; right: 15px;">
-            <button type="button" class="btn">
+            <button type="button" id="Update" class="btn">
                 Update
             </button>
             <button type="button" class="btn">
