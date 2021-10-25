@@ -16,6 +16,16 @@
             margin: 0;
             height: 100%;
             width: 100%;
+            position: relative;
+        }
+        .btn{
+            padding: 10px;
+            background: white;
+            border: 1px solid lightgray;
+            cursor: pointer;
+        }
+        .btn:hover{
+            background: rgb(235, 235, 235);
         }
     </style>
 
@@ -54,7 +64,7 @@
 
             const map = new Map({
                 // basemap: "gray-vector",
-                basemap: "topo-vector", 
+                basemap: "topo-vector",
                 layers: [graphicsLayer]
             });
 
@@ -64,7 +74,7 @@
                 map: map,
                 zoom: 16
             });
-            view.on('click', function(e){
+            view.on('click', function (e) {
                 console.log('view on click : ', e);
                 // console.log('mapPoint: ', `[${e.mapPoint.x}, ${e.mapPoint.y}]`);
             })
@@ -102,13 +112,23 @@
 
             view.ui.add(sketch, 'top-right');
 
+
+            
+
         });
     </script>
 </head>
 
 <body>
     <div id="viewDiv">
-        <button type="button" class="my_button">My Button!</button>
+        <div style="position: absolute; top: 68px; right: 15px;">
+            <button type="button" class="btn">
+                Update
+            </button>
+            <button type="button" class="btn">
+                Split
+            </button>
+        </div>
     </div>
 </body>
 
