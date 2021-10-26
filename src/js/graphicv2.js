@@ -66,20 +66,17 @@
                 view.ui.add(sketch, "top-right");
 
                 on(dom.byId("Split"), "click", function (evt) {
-                    console.log('start sketch ', sketch);
+                    // console.log('start sketch ', sketch);
                     const allGraphics = sketch.layer.graphics;
                     const polygonGraphic = allGraphics.filter(e => e.geometry.type === "polygon").items[0].geometry;
                     // polygonGraphic.spatialReference.wkid = 3857
                     const polylineGraphic = allGraphics.filter(e => e.geometry.type === "polyline").items[0].geometry;
-                    // const gs = new GeometryService();
-                    // const polygonIns = new Polygon(polygonGraphic.geometry);
-                    // const polylineIns = new Polyline(polylineGraphic.geometry);
-                    // console.log(polygonIns.spatialReference.wkid);
-                    // console.log(polylineIns.spatialReference.wkid);
+                    
                     const polygons = geometryEngine.cut(
                         polygonGraphic,
                         polylineGraphic
                     )
+
                     // remove selected graphic one
                     sketch.delete();
                     // add new poligons
@@ -93,7 +90,7 @@
                         nGraphicsLayer.graphics.add(poligonGraphic);
                         map.layers.add(nGraphicsLayer)
                     }
-                    console.log('end sketch ', sketch);
+                    // console.log('end sketch ', sketch);
     
                 });
             });

@@ -20,7 +20,7 @@
         }
 
         .btn {
-            padding: 10px;
+            padding: 7px;
             background: white;
             border: 1px solid lightgray;
             cursor: pointer;
@@ -39,7 +39,8 @@
             "esri/widgets/Sketch",
             "esri/layers/GraphicsLayer",
             "esri/geometry/Geometry",
-            "dojo/dom", "dojo/on"
+            "dojo/dom", "dojo/on",
+            "esri/geometry/geometryEngine",
         ], (
             Map,
             MapView,
@@ -47,7 +48,8 @@
             Sketch,
             GraphicsLayer,
             Geometry,
-            dom, on
+            dom, on,
+            geometryEngine
         ) => {
             const _rings = [
                 [10062703.0735754, 2722478.508873152],
@@ -55,11 +57,22 @@
                 [10063357.034947006, 2723370.2742753057],
                 [10062548.076349035, 2722960.486858215],
                 [10062703.0735754, 2722478.508873152]
-
-                // [-11220289.94627741, 4002837.4133387236],
-                // [-11220289.94627741, 4885837.964088845],
-                // [-9905573.059772726, 4885837.964088845],
-                // [-11220289.94627741, 4002837.4133387236]
+            ]
+            const _mrings = [
+                [
+                    [10063616.330328727, 2722782.927836767],
+                    [10063643.41794903, 2722851.688793817],
+                    [10063671.2760309, 2722801.243073582],
+                    [10063616.330328727, 2722782.927836767]
+                ],
+                [
+                    [10062703.0735754, 2722478.508873152],
+                    [10062548.076349035, 2722960.486858215],
+                    [10063357.034947006, 2723370.2742753057],
+                    [10063643.41794903, 2722851.688793817],
+                    [10063616.330328727, 2722782.927836767],
+                    [10062703.0735754, 2722478.508873152]
+                ]
             ]
             const updateRings = [
                 [10062970.401763909, 2723129.5184100512],
@@ -74,37 +87,38 @@
             // const _center = [-11447244.491202017, 4467769.286797373];
             // const _center = [-80, 35];
 
-            var sketch = init(_rings);
+            var sketch = init(_mrings);
 
             // Extra buttons
             on(dom.byId("Update"), "click", function (evt) {
-                //remove from sketch
-                console.log(sketch);
-                // console.log('working... ', evt);
-                // // view.ui.remove(sketch);
-                sketch.delete();
-                // view.ui.remove(sketch);
-                // const uGraphicsLayer = new GraphicsLayer();
-                // const polygonGraphicUpdated = createPolygonGraphic(updateRings);
-                // uGraphicsLayer.add(polygonGraphicUpdated);
-                // // sketch.layer = graphicsLayer;
-                // map.layers = []
-                // map.layers.push(uGraphicsLayer)
-                // const updatedSketch = new Sketch({
-                //     view: view,
-                //     layer: polygonGraphicUpdated,
-                //     creationMode: "update"
-                // });
-                // view.ui.add(updatedSketch, 'top-right');
-                
-                init(updateRings);
+                // remove from sketch
+                // sketch.delete();
+                // get new polygon point and upate
+                // console.log(sketch);
+                // init(updateRings);
+            });
+            on(dom.byId("Split"), "click", function (evt) {
+                // remove from sketch
+                // sketch.delete();
+                // cut graphics and get new graphics
+                const newPolygons = cutGraphicAndReturnPolyrings();
+                let points = [];
+                newPolygons.polygons.forEach(element => {
+                    // console.log('cutGraphicAndReturnPolyrings ', element);
+                    points.push(element.rings[0]);
+                });
+                // const generatePoints = newPolygons.polygons.map(e=> e.rings)
+
+                // console.log(generatePoints);
+                init(points);
             });
 
-            function init(pointRings) {
+            function init(pointRings, isUpdate) {
+                // console.log('check point rings ', pointRings)
                 const graphicsLayer = new GraphicsLayer();
                 const map = new Map({
-                    // basemap: "gray-vector",
-                    basemap: "topo-vector",
+                    basemap: "gray-vector",
+                    // basemap: "topo-vector",
                     layers: [graphicsLayer]
                 });
 
@@ -112,16 +126,31 @@
                     center: _center,
                     container: "viewDiv",
                     map: map,
-                    zoom: 16
+                    zoom: 13
                 });
                 // view.on('click', function (e) {
                 //     // console.log('view on click : ', e);
                 //     console.log(`[${e.mapPoint.x}, ${e.mapPoint.y}]`);
                 // })
+                if (pointRings[0].constructor === Array && pointRings[0][1].constructor === Array) {
+                    // console.log('multi')
+                    for (let i = 0; i < pointRings.length; i++) {
+                        const element = pointRings[i];
+                        console.log(element);
+                        const polygonGraphic = createPolygonGraphic(element);
+                        graphicsLayer.add(polygonGraphic);
+                    }
+                } else {
+                    const polygonGraphic = createPolygonGraphic(pointRings);
+                    graphicsLayer.add(polygonGraphic);
+                }
+                // const polygonGraphic = createPolygonGraphic(pointRings);
+                // if (isUpdate) {
+                //     graphicsLayer.addMany(polygonGraphic);
+                // } else {
+                //     graphicsLayer.add(polygonGraphic);
+                // }
 
-                const polygonGraphic = createPolygonGraphic(pointRings);
-
-                graphicsLayer.add(polygonGraphic);
 
                 const sketch = new Sketch({
                     view: view,
@@ -134,6 +163,7 @@
             }
 
             function createPolygonGraphic(_rings) {
+                // console.log('createPolygonGraphic ', _rings);
                 var polygon = {
                     type: "polygon",
                     rings: _rings,
@@ -156,17 +186,49 @@
                 return polygonGraphic;
             }
 
+            function cutGraphicAndReturnPolyrings(params) {
+                const allGraphics = sketch.layer.graphics;
+                const selectedGraphics = sketch.updateGraphics.items;
+                const otherGraphics = [];
+                for (let i = 0; i < allGraphics.items.length; i++) {
+                    const element = allGraphics.items[i];
+                    const hasGraphic = selectedGraphics.filter(e => e.uid === element.uid);
+                    if (hasGraphic.length === 0) {
+                        otherGraphics.push(hasGraphic);
+                    }
+                }
+                const polyline = selectedGraphics.filter(e => {
+                    const elem = e.geometry.type;
+                    return elem === "polyline";
+                });
+                const polygons = geometryEngine.cut(
+                    selectedGraphics[0].geometry,
+                    polyline[0].geometry
+                )
+
+                return {
+                    allGraphics,
+                    selectedGraphics: selectedGraphics.length > 0 ? {
+                        allGraphics: selectedGraphics,
+                        polyline: polyline
+                    }
+                        : [],
+                    polygons,
+                    otherGraphics
+                }
+
+            }
         });
     </script>
 </head>
 
 <body>
     <div id="viewDiv">
-        <div style="position: absolute; top: 68px; right: 15px;">
+        <div style="position: absolute; top: 65px; right: 20px;">
             <button type="button" id="Update" class="btn">
                 Update
             </button>
-            <button type="button" class="btn">
+            <button type="button" id="Split" class="btn">
                 Split
             </button>
         </div>
