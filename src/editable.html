@@ -98,18 +98,15 @@
                 // init(updateRings);
             });
             on(dom.byId("Split"), "click", function (evt) {
-                // remove from sketch
-                // sketch.delete();
-                // cut graphics and get new graphics
                 const newPolygons = cutGraphicAndReturnPolyrings();
+                if (newPolygons.otherGraphics.length > 0) {
+                    newPolygons.polygons = [...newPolygons.polygons, ...newPolygons.otherGraphics.map(e=> e.geometry)]
+                }
                 let points = [];
                 newPolygons.polygons.forEach(element => {
-                    // console.log('cutGraphicAndReturnPolyrings ', element);
                     points.push(element.rings[0]);
                 });
-                // const generatePoints = newPolygons.polygons.map(e=> e.rings)
-
-                // console.log(generatePoints);
+                console.log(points);
                 init(points);
             });
 
@@ -132,11 +129,11 @@
                 //     // console.log('view on click : ', e);
                 //     console.log(`[${e.mapPoint.x}, ${e.mapPoint.y}]`);
                 // })
-                if (pointRings[0].constructor === Array && pointRings[0][1].constructor === Array) {
+                if (isMultidimentionalArray(pointRings)) {
                     // console.log('multi')
                     for (let i = 0; i < pointRings.length; i++) {
                         const element = pointRings[i];
-                        console.log(element);
+                        // console.log(element);
                         const polygonGraphic = createPolygonGraphic(element);
                         graphicsLayer.add(polygonGraphic);
                     }
@@ -150,7 +147,6 @@
                 // } else {
                 //     graphicsLayer.add(polygonGraphic);
                 // }
-
 
                 const sketch = new Sketch({
                     view: view,
@@ -189,14 +185,7 @@
             function cutGraphicAndReturnPolyrings(params) {
                 const allGraphics = sketch.layer.graphics;
                 const selectedGraphics = sketch.updateGraphics.items;
-                const otherGraphics = [];
-                for (let i = 0; i < allGraphics.items.length; i++) {
-                    const element = allGraphics.items[i];
-                    const hasGraphic = selectedGraphics.filter(e => e.uid === element.uid);
-                    if (hasGraphic.length === 0) {
-                        otherGraphics.push(hasGraphic);
-                    }
-                }
+                const otherGraphics = getNotInSelectedGraphic(allGraphics.items, selectedGraphics);
                 const polyline = selectedGraphics.filter(e => {
                     const elem = e.geometry.type;
                     return elem === "polyline";
@@ -216,8 +205,27 @@
                     polygons,
                     otherGraphics
                 }
+            }
+
+            function isMultidimentionalArray(arrayData) {
+                if (arrayData.length > 0) {
+                    return arrayData[0].constructor === Array && arrayData[0][1].constructor === Array
+                } else {
+                    return false;
+                }
 
             }
+
+            function getNotInSelectedGraphic(obj1, obj2) {
+                let items = [];
+                for (let i = 0; i < obj1.length; i++) {
+                    const elem = obj1[i];
+                    const chk = obj2.filter(e => e.uid === elem.uid);
+                    if (chk.length == 0) items.push(elem);
+                }
+                return items;
+            }
+
         });
     </script>
 </head>
