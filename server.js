@@ -30,6 +30,9 @@ app.get('/graphicjsv2', (req, res) => {
 app.get('/basicjs', (req, res) => {
     res.sendFile(__dirname + '/src/js/basicscript.js')
   })
+  app.get('/editablejs', (req, res) => {
+    res.sendFile(__dirname + '/src/js/editable.js')
+  })
 // app.get('/', (req, res) => {
 //     res.sendFile(__dirname + '/index.html')
 //   })
